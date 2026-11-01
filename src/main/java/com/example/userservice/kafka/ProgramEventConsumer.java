@@ -5,6 +5,8 @@ import com.example.userservice.model.AuditLog;
 import com.example.userservice.repository.AuditLogRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class ProgramEventConsumer {
     private final AuditLogRepository auditLogRepository;
     private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(ProgramEventConsumer.class);
 
     public ProgramEventConsumer(AuditLogRepository auditLogRepository, ObjectMapper objectMapper) {
         this.auditLogRepository = auditLogRepository;
@@ -20,7 +23,7 @@ public class ProgramEventConsumer {
 
     @KafkaListener(topics = "program-events", groupId = "user-service-group")
     public void consume(String message) {
-        System.out.println("Kafka received: " + message);
+        log.info("Kafka received: " + message);
         try {
             // Парсим JSON
             JsonNode jsonNode = objectMapper.readTree(message);
@@ -33,10 +36,10 @@ public class ProgramEventConsumer {
 
             // Сохраняем в БД
             auditLogRepository.save(auditLog);
-            System.out.println("Audit has save");
+            log.info("Audit has save");
 
         } catch (Exception e) {
-            System.err.println("Error audit save: " + e.getMessage());
+            log.error("Error audit save: " + e.getMessage());
         }
     }
 }
